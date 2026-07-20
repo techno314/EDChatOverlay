@@ -41,9 +41,11 @@ feeds it lines to draw; it doesn't draw anything itself.
 
 1. Make sure [EDMCModernOverlay](https://github.com/SweetJonnySauce/EDMCModernOverlay)
    is installed and enabled in EDMC.
-2. Copy this folder into EDMC's plugins directory (**File > Open Plugins
-   Folder** in EDMC), or link it there if you're developing on it — either
-   way the folder name should stay `EDChatOverlay`.
+2. Download the latest `EDChatOverlay.zip` from the
+   [Releases page](https://github.com/techno314/EDChatOverlay/releases) and
+   extract it into EDMC's plugins directory (**File > Open Plugins Folder**
+   in EDMC) — it extracts to an `EDChatOverlay` folder, which is exactly what
+   EDMC expects to find there. 
 3. Restart EDMC (or start it, if it wasn't running) to load the plugin.
 4. Optional — translation: open EDMC's **File > Settings > EDChatOverlay**
    tab, paste in a [DeepL API key](https://www.deepl.com/your-account/keys)
