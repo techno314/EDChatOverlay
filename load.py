@@ -105,23 +105,33 @@ def _maybe_translate(msg_id: int, text: str):
 
 
 def journal_entry(cmdr, is_beta, system, station, entry, state):
-    if entry.get("event") != "ReceiveText":
+    event = entry.get("event")
+    if event not in ("ReceiveText", "SendText"):
         return
     if _overlay is None or not _overlay.available:
         return
     if _is_backlog(entry):
         return
 
-    channel = chat_overlay.canonical_channel(entry.get("Channel"))
-    if not _channel_enabled(channel):
-        return
-    who = entry.get("From_Localised") or entry.get("From") or "?"
-    text = entry.get("Message_Localised") or entry.get("Message") or ""
-    if not text:
-        return
-    msg = _overlay.push(channel, who, text)
-    if _bool_setting("edchat_translate_enabled", False) and channel != chat_overlay.CHANNEL_NPC:
-        threading.Thread(target=_maybe_translate, args=(msg.id, text), daemon=True).start()
+    if event == "ReceiveText":
+        channel = chat_overlay.canonical_channel(entry.get("Channel"))
+        if not _channel_enabled(channel):
+            return
+        who = entry.get("From_Localised") or entry.get("From") or "?"
+        text = entry.get("Message_Localised") or entry.get("Message") or ""
+        if not text:
+            return
+        msg = _overlay.push(channel, who, text)
+        if _bool_setting("edchat_translate_enabled", False) and channel != chat_overlay.CHANNEL_NPC:
+            threading.Thread(target=_maybe_translate, args=(msg.id, text), daemon=True).start()
+    else:  # SendText -- shown if enabled, never translated
+        if not _bool_setting("edchat_show_outgoing", False):
+            return
+        channel = chat_overlay.canonical_channel(entry.get("To"))
+        text = entry.get("Message") or ""
+        if not text:
+            return
+        _overlay.push(channel, cmdr or "You", text, outgoing=True)
 
 
 def plugin_start3(plugin_dir: str) -> str:
@@ -177,9 +187,16 @@ def plugin_prefs(parent, cmdr, is_beta):
 
     translate_var = tk.BooleanVar(value=_bool_setting("edchat_translate_enabled", False))
     nb.Checkbutton(frame, text="Auto-translate incoming messages", variable=translate_var).grid(
-        row=row, column=0, columnspan=2, sticky="w", padx=6, pady=(4, 10)
+        row=row, column=0, columnspan=2, sticky="w", padx=6, pady=4
     )
     _prefs_vars["translate_enabled"] = translate_var
+    row += 1
+
+    show_outgoing_var = tk.BooleanVar(value=_bool_setting("edchat_show_outgoing", False))
+    nb.Checkbutton(frame, text="Show messages you send (never translated)", variable=show_outgoing_var).grid(
+        row=row, column=0, columnspan=2, sticky="w", padx=6, pady=(4, 10)
+    )
+    _prefs_vars["edchat_show_outgoing"] = show_outgoing_var
     row += 1
 
     nb.Label(frame, text="Lines to show:").grid(row=row, column=0, sticky="w", padx=6, pady=4)
@@ -248,6 +265,7 @@ def prefs_changed(cmdr, is_beta) -> None:
     config.set("edchat_deepl_api_key", _prefs_vars["deepl_api_key"].get().strip())
     config.set("edchat_target_lang", _prefs_vars["target_lang"].get())
     config.set("edchat_translate_enabled", _prefs_vars["translate_enabled"].get())
+    config.set("edchat_show_outgoing", _prefs_vars["edchat_show_outgoing"].get())
     max_lines = max(1, _prefs_vars["max_lines"].get())
     config.set("edchat_max_lines", max_lines)
     fade_seconds = max(0, _prefs_vars["fade_seconds"].get())

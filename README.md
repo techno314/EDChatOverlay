@@ -12,9 +12,9 @@ feeds it lines to draw; it doesn't draw anything itself.
 
 ## How it works
 
-- `journal_entry()` is called by EDMC for every new `ReceiveText` journal
-  event as it happens — no polling, no separate journal reader. Messages
-  you send yourself are never shown or translated.
+- `journal_entry()` is called by EDMC for every new `ReceiveText` (and,
+  optionally, `SendText`) journal event as it happens — no polling, no
+  separate journal reader.
 - Each new message pushes onto a fixed-size scrolling log (newest at top,
   configurable line count) rendered via `edmcoverlay.Overlay().send_message(...)`.
   Long lines are word-wrapped rather than running off-screen.
@@ -53,14 +53,15 @@ feeds it lines to draw; it doesn't draw anything itself.
    check **Auto-translate incoming messages**. Use **Test DeepL Key** to
    confirm it works before relying on it in-game.
 5. Also in that Settings tab: choose which channels to show (Local, Wing,
-   Direct/Friend, Squadron, System; NPC chatter is off by default), how many
-   lines of history to keep on screen, and how long messages stay up before
-   fading out (0 = never).
+   Direct/Friend, Squadron, System; NPC chatter is off by default), whether
+   to show messages you send yourself (off by default, shown in gray), how
+   many lines of history to keep on screen, and how long messages stay up
+   before fading out (0 = never).
 
 ## Notes
 
-- Only messages you *receive* are shown; what you type yourself never
-  appears in the overlay or gets translated.
+- Messages you send are never translated, even if you enable "Show messages
+  you send" — translation only applies to what other commanders send you.
 - If EDMCModernOverlay isn't installed/loaded, the plugin still loads
   cleanly (EDMC's Settings will show "EDMCModernOverlay not found") — it
   just has nothing to draw to.

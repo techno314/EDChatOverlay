@@ -39,6 +39,7 @@ CHANNEL_COLORS = {
     CHANNEL_NPC: "#AAAAAA",
     CHANNEL_VOICE: "#CC99FF",
 }
+OUTGOING_COLOR = "#888888"
 TRANSLATION_COLOR = "#FFD27F"
 
 _KNOWN_CHANNEL_KEYS = {
@@ -111,11 +112,12 @@ def _import_overlay_client():
 class ChatMessage:
     _ids = count()
 
-    def __init__(self, channel, who, text):
+    def __init__(self, channel, who, text, outgoing=False):
         self.id = next(ChatMessage._ids)
         self.channel = channel
         self.who = who
         self.text = text
+        self.outgoing = outgoing
         self.translated = None  # filled in later, asynchronously
         self.created_at = time.monotonic()
 
@@ -189,8 +191,8 @@ class ChatOverlay:
         while self._messages and self._messages[0].created_at < cutoff:
             self._messages.popleft()
 
-    def push(self, channel, who, text) -> "ChatMessage":
-        msg = ChatMessage(channel, who, text)
+    def push(self, channel, who, text, outgoing=False) -> "ChatMessage":
+        msg = ChatMessage(channel, who, text, outgoing)
         with self._lock:
             self._messages.append(msg)
             while len(self._messages) > self.max_messages:
@@ -226,8 +228,9 @@ class ChatOverlay:
         lines = []
         for msg in reversed(self._messages):  # newest first
             label = CHANNEL_LABELS.get(msg.channel, msg.channel.title())
-            color = CHANNEL_COLORS.get(msg.channel, "#FFFFFF")
-            for wrapped in self._wrap(f"[{label}] {msg.who}: {msg.text}"):
+            color = OUTGOING_COLOR if msg.outgoing else CHANNEL_COLORS.get(msg.channel, "#FFFFFF")
+            prefix = "You" if msg.outgoing else msg.who
+            for wrapped in self._wrap(f"[{label}] {prefix}: {msg.text}"):
                 lines.append((wrapped, color))
             if msg.translated:
                 for wrapped in self._wrap(f"    -> {msg.translated}"):
