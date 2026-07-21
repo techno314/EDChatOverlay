@@ -15,10 +15,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify plugin code compiles
+        run: python3 -m py_compile *.py
+
       - name: Build plugin zip
         run: |
           mkdir -p dist/EDChatOverlay
-          cp load.py chat_overlay.py deepl_client.py README.md dist/EDChatOverlay/
+          cp *.py README.md dist/EDChatOverlay/
           cd dist
           zip -r "EDChatOverlay-${{ github.ref_name }}.zip" EDChatOverlay
 
